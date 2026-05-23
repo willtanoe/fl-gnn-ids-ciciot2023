@@ -6,7 +6,7 @@
 
 Federated Learning with Graph Neural Networks (GCN, GAT, GraphSAGE) for network intrusion detection on the **CICIoT2023** dataset. Implements manual FedAvg (no Flower simulation) to avoid Windows compatibility issues with Ray.
 
-**Key findings:** With 5 clients and 50 FL rounds, using Focal Loss (γ=2.0) and class-weighted cross-entropy, GNN-based FL models significantly outperform non-graph baselines on 34-class imbalanced CICIoT2023 intrusion detection. (Results being updated after training fix.)
+**Key findings:** With strict train/val/test separation and 5-client FL (50 rounds, 10 local epochs, weighted CE), test accuracy peaks at **41.35% (FL-GAT)** and macro F1 at **31.97%** on CICIoT2023. Metrics remain modest due to severe class imbalance and non-IID client splits.
 
 ## Dataset
 
@@ -42,11 +42,11 @@ CICIoT2023 CSV (5.4M × 47)
     ↓ 01_preprocessing.ipynb
 Clean, scaled NPZ (44 features)
     ↓ 02_graph_construction.ipynb
-Stratified sample ~96K → Dirichlet split → per-client k-NN graphs
+Stratified sample (train/val/test) → Dirichlet split (train only) → per-client + val/test k-NN graphs
     ↓ 03_federated_training.ipynb
-Manual FedAvg: GCN / GAT / GraphSAGE (50 rounds, 5 local epochs, Focal Loss γ=2.0, weighted CE)
+Manual FedAvg (train on clients, eval on val only)
     ↓ 04_evaluation.ipynb  +  05_comprehensive_analysis.ipynb
-Metrics, plots, baselines, hyperparameter sweeps, statistical analysis
+Test-only evaluation (04) + val-only analysis/baselines (05)
 ```
 
 ## Structure
@@ -55,10 +55,10 @@ Metrics, plots, baselines, hyperparameter sweeps, statistical analysis
 fl-gnn/
 ├── notebooks/
 │   ├── 01_preprocessing.ipynb              # Load CSV → clean → scale → save NPZ
-│   ├── 02_graph_construction.ipynb         # Stratified sampling, Dirichlet split, k-NN graphs
+│   ├── 02_graph_construction.ipynb         # Stratified sampling (train/val/test), Dirichlet split, k-NN graphs
 │   ├── 03_federated_training.ipynb         # FedAvg training for GCN/GAT/GraphSAGE
 │   ├── 04_evaluation.ipynb                 # Metrics, confusion matrix, per-class F1
-│   └── 05_comprehensive_analysis.ipynb     # Baselines, hyperparam sweep, stats, comm cost
+│   └── 05_comprehensive_analysis.ipynb     # Baselines, hyperparam sweep, stats (val-only), comm cost
 ├── results/                # Trained models (.pt) and figures (.png)
 │   ├── training_losses.png
 │   ├── accuracy_comparison.png
@@ -94,10 +94,10 @@ Open each notebook in VSCode or Jupyter and execute cells sequentially:
 | Step | Notebook | Description | Est. Time |
 |------|----------|-------------|-----------|
 | 1 | `01_preprocessing.ipynb` | Load CSV → clean → scale → save NPZ | ~5 min |
-| 2 | `02_graph_construction.ipynb` | Stratified sample 96K → Dirichlet → k-NN | ~3 min |
-| 3 | `03_federated_training.ipynb` | FedAvg for GCN, GAT, GraphSAGE (50 rounds × 5 epochs) | ~15 min |
-| 4 | `04_evaluation.ipynb` | Metrics, confusion matrix, plots | ~30 sec |
-| 5 | `05_comprehensive_analysis.ipynb` | Baselines, sweeps, stats, comm cost | ~2 hrs |
+| 2 | `02_graph_construction.ipynb` | Stratified sample train/val/test → Dirichlet → k-NN | ~5 min |
+| 3 | `03_federated_training.ipynb` | FedAvg for GCN, GAT, GraphSAGE (50 rounds × 10 epochs, val eval only) | ~30 min |
+| 4 | `04_evaluation.ipynb` | Test-only metrics, confusion matrix, plots | ~30 sec |
+| 5 | `05_comprehensive_analysis.ipynb` | Baselines, sweeps, stats (val-only), comm cost | ~2 hrs |
 
 ### Hardware Notes
 
@@ -111,41 +111,42 @@ Open each notebook in VSCode or Jupyter and execute cells sequentially:
 |----------|--------|-----------|
 | FL framework | Manual FedAvg | Avoid Ray/Flower Windows issues |
 | Graph construction | Per-client k-NN (cosine, k=15) | More realistic FL; each client builds its own graph |
-| Sampling | Stratified 80K train / 16K test | Feasible k-NN graph size with class balance |
+| Sampling | Stratified train/val/test sampling | Strict split and no leakage |
 | Feature scaling | StandardScaler → float32 | Preserves magnitude (important for IDS) |
 | Model architecture | 3-layer GCN/GAT/GraphSAGE + BatchNorm | Balanced complexity for 44-dim input |
-| Loss function | Focal Loss (γ=2.0) + class weights | Addresses severe 34-class imbalance |
+| Loss function | Weighted Cross-Entropy | Stable under severe imbalance |
 | FL rounds | 50 | Sufficient for FL convergence |
-| Optimizer | AdamW (wd=1e-4) + CosineAnnealingLR | Better convergence than vanilla Adam |
+| Local epochs | 10 | More stable client updates |
+| Optimizer | AdamW (wd=1e-4), constant LR | Avoids LR reset per FL round |
 
 ## Results
 
-### Training Curves (3 FL models × 10 rounds)
+### Training Curves (Val, 3 FL models × 50 rounds)
 
 ![Training Losses](results/training_losses.png)
 
-### Per-Model Accuracy (5 seeds)
+### Per-Model Accuracy (Val, 5 seeds)
 
 ![Accuracy Comparison](results/accuracy_comparison.png)
 
-### Overall Comparison — All Methods
+### Overall Comparison — All Methods (Val)
 
-FL-GNN variants compared against FL-CNN, Centralized GCN, and FL-MLP baselines. Mean ± std over 5 seeds.
+FL-GNN variants compared against FL-CNN, Centralized GCN, and FL-MLP baselines using **validation** only.
 
 ![Comparison Bar](results/comparison_bar.png)
 
 | Method | Accuracy | F1 (w) | F1 (macro) |
 |--------|----------|--------|------------|
-| **FL-GCN** | **24.9% ± 2.3%** | **20.2% ± 3.2%** | **16.6% ± 2.6%** |
-| FL-GraphSAGE | 18.1% | 15.3% | 12.6% |
-| FL-GAT | 6.4% | 3.1% | 2.5% |
-| FL-MLP | 10.6% | 10.1% | 8.7% |
-| FL-CNN (1D) | 5.5% ± 1.7% | 1.8% ± 0.7% | 1.5% ± 0.5% |
-| Centralized GCN | 6.6% | 4.5% | 3.9% |
+| FL-GCN | 0.3031 | 0.2676 | 0.2333 |
+| **FL-GAT** | **0.4164** | **0.3776** | **0.3231** |
+| FL-GraphSAGE | 0.3714 | 0.3197 | 0.2766 |
+| **FL-CNN** | **0.6192** | **0.5933** | **0.5030** |
+| FL-MLP | 0.5683 | 0.5527 | 0.4577 |
+| Centralized GCN | 0.2054 | 0.1574 | 0.1369 |
 
-> **Note:** The numbers above are from the original unweighted training (10 rounds, plain CE loss). The notebooks have been updated with Focal Loss, class weighting, BatchNorm, and 50 rounds. Re-run notebooks 03–05 to get updated results with significantly improved metrics.
+> **Note:** The table above is **validation-only**. Run `04_evaluation.ipynb` for test-only metrics.
 
-### Statistical Analysis (5 seeds — FL-GCN vs FL-CNN)
+### Statistical Analysis (Val, 5 seeds — FL-GCN vs FL-CNN)
 
 ![Statistical Analysis](results/statistical_analysis_bar.png)
 
@@ -167,7 +168,7 @@ FL-GNN variants compared against FL-CNN, Centralized GCN, and FL-MLP baselines. 
 ![Hyperparameter: Dirichlet Alpha](results/hyperparam_alpha.png)
 ![Hyperparameter: Number of Clients](results/hyperparam_clients.png)
 
-### Communication Cost (10 rounds, 5 clients)
+### Communication Cost (50 rounds, 5 clients)
 
 | Method | Params | MB/round | Total MB |
 |--------|--------|----------|----------|
@@ -188,3 +189,20 @@ FL-GNN variants compared against FL-CNN, Centralized GCN, and FL-MLP baselines. 
 ## License
 
 MIT
+### Test-Only Results (Notebook 04)
+
+| Model | Accuracy | F1 (weighted) | F1 (macro) |
+|-------|----------|---------------|------------|
+| GCN | 0.2967 | 0.2611 | 0.2234 |
+| **GAT** | **0.4135** | **0.3764** | **0.3197** |
+| GraphSAGE | 0.3599 | 0.3081 | 0.2661 |
+
+## Why The Metrics Are Still Modest
+
+Even after fixing leakage and increasing rounds/epochs, the numbers remain moderate because:
+
+1. **Severe class imbalance (34 classes):** Some attack types are extremely rare. Even weighted CE cannot fully recover minority classes.
+2. **Non‑IID client splits (Dirichlet α=0.5):** Clients see different label distributions, which weakens global convergence.
+3. **k‑NN graph noise:** Graphs are built from high‑dimensional flow features; cosine k‑NN can connect dissimilar samples, blurring class boundaries.
+4. **Strict split (no leakage):** Validation/test are completely isolated, so reported metrics are honest but lower.
+5. **Limited sample budget:** Train/val/test are sampled from 5.4M rows; rare classes may have too few instances to learn robustly.
