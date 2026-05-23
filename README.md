@@ -9,12 +9,13 @@ Federated Learning with Graph Neural Networks (GCN, GAT, GraphSAGE) for intrusio
 ```
 fl-gnn/
 ├── notebooks/
-│   ├── 01_preprocessing.ipynb    # Load, clean, scale, save as NPZ
-│   ├── 02_graph_construction.ipynb # Stratified sampling, Dirichlet split, k-NN graphs
-│   ├── 03_federated_training.ipynb # FedAvg training for GCN/GAT/GraphSAGE
-│   └── 04_evaluation.ipynb        # Metrics, confusion matrix, per-class F1
-├── dataset-clean/  # Preprocessed data (gitignored)
-├── results/        # Trained models & plots (gitignored)
+│   ├── 01_preprocessing.ipynb         # Load, clean, scale, save as NPZ
+│   ├── 02_graph_construction.ipynb    # Stratified sampling, Dirichlet split, k-NN graphs
+│   ├── 03_federated_training.ipynb    # FedAvg training for GCN/GAT/GraphSAGE
+│   ├── 04_evaluation.ipynb            # Metrics, confusion matrix, per-class F1
+│   └── 05_comprehensive_analysis.ipynb # Baselines, hyperparam sweep, stats, comm cost
+├── dataset-clean/      # Preprocessed data (gitignored)
+├── results/            # Trained models & plots (PNGs tracked)
 ├── evaluation_results/ # Evaluation outputs (gitignored)
 └── requirements.txt
 ```
@@ -27,6 +28,17 @@ fl-gnn/
    - `02_graph_construction.ipynb`
    - `03_federated_training.ipynb`
    - `04_evaluation.ipynb`
+   - `05_comprehensive_analysis.ipynb` (optional: baselines, stats, hyperparameter sweep)
+
+## Pipeline Overview
+
+| Step | Notebook | Description | Est. Time |
+|------|----------|-------------|-----------|
+| 1 | `01_preprocessing.ipynb` | Load CSV → clean → scale → save NPZ | ~5 min |
+| 2 | `02_graph_construction.ipynb` | Stratified sample 100K → Dirichlet split → k-NN graphs | ~3 min |
+| 3 | `03_federated_training.ipynb` | FL-FedAvg for GCN, GAT, GraphSAGE | ~3 min |
+| 4 | `04_evaluation.ipynb` | Load trained models → metrics → plots | ~30 sec |
+| 5 | `05_comprehensive_analysis.ipynb` | Baselines, hyperparameter sweep, stats, communication cost | ~30 min |
 
 ## Results
 
