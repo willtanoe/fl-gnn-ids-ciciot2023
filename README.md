@@ -8,6 +8,20 @@ Federated Learning with Graph Neural Networks (GCN, GAT, GraphSAGE) for network 
 
 **Key findings:** FL-GraphSAGE achieves **92.4% macro F1** with 5 clients and 10 communication rounds, outperforming FL-CNN (86.1%), Centralized GCN (89.1%), and FL-MLP (83.5%) baselines.
 
+## Dataset
+
+This project uses the [**CICIoT2023**](https://www.unb.ca/cic/datasets/iotdataset-2023.html) dataset, preprocessed and split into three CSV files by [Himadri07 on Kaggle](https://www.kaggle.com/datasets/himadri07/ciciot2023):
+
+| Split | Rows | Usage |
+|-------|------|-------|
+| `train.csv` | ~3.8M | Training |
+| `validation.csv` | ~1.1M | Validation |
+| `test.csv` | ~545K | Testing |
+
+The dataset contains 47 columns: 46 network traffic features (e.g., flow duration, packet length, protocol type) and a binary label indicating normal vs. attack traffic. We credit Himadri07 for cleaning and splitting the raw CICIoT2023 data — a time-consuming task that made this work feasible.
+
+Note that only the original `train.csv` is used in our pipeline (merged with validation for stratified sampling) since we rely on the test split for final evaluation.
+
 ## Pipeline
 
 ```
@@ -50,13 +64,19 @@ fl-gnn/
 
 ## How to Run
 
-1. Install dependencies:
+### 1. Download the dataset
+
+Download `train.csv` from [Kaggle](https://www.kaggle.com/datasets/himadri07/ciciot2023) and place it in the project root.
+
+### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Open notebooks in order in VSCode or Jupyter:
+### 3. Run notebooks in order
+
+Open each notebook in VSCode or Jupyter and execute cells sequentially:
 
 | Step | Notebook | Description | Est. Time |
 |------|----------|-------------|-----------|
