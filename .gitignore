@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+dataset-clean/
+data/
+*.parquet
+*.pkl
+results/
+evaluation_results/
+*.ipynb_checkpoints/
