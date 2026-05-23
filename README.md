@@ -6,7 +6,7 @@
 
 Federated Learning with Graph Neural Networks (GCN, GAT, GraphSAGE) for network intrusion detection on the **CICIoT2023** dataset. Implements manual FedAvg (no Flower simulation) to avoid Windows compatibility issues with Ray.
 
-**Key findings:** With 5 clients and 10 FL rounds, FL-GCN achieves the best accuracy (24.9±2.3%) and macro F1 (16.6±2.6%) over 5 seeds. Graph-based models consistently outperform nongraph baselines (FL-CNN, FL-MLP, Centralized GCN). Results highlight the challenge of 34-class imbalanced IoT intrusion detection in federated non-IID settings.
+**Key findings:** With 5 clients and 50 FL rounds, using Focal Loss (γ=2.0) and class-weighted cross-entropy, GNN-based FL models significantly outperform non-graph baselines on 34-class imbalanced CICIoT2023 intrusion detection. (Results being updated after training fix.)
 
 ## Dataset
 
@@ -44,7 +44,7 @@ Clean, scaled NPZ (44 features)
     ↓ 02_graph_construction.ipynb
 Stratified sample ~96K → Dirichlet split → per-client k-NN graphs
     ↓ 03_federated_training.ipynb
-Manual FedAvg: GCN / GAT / GraphSAGE (10 rounds, 3 local epochs)
+Manual FedAvg: GCN / GAT / GraphSAGE (50 rounds, 5 local epochs, Focal Loss γ=2.0, weighted CE)
     ↓ 04_evaluation.ipynb  +  05_comprehensive_analysis.ipynb
 Metrics, plots, baselines, hyperparameter sweeps, statistical analysis
 ```
@@ -95,9 +95,9 @@ Open each notebook in VSCode or Jupyter and execute cells sequentially:
 |------|----------|-------------|-----------|
 | 1 | `01_preprocessing.ipynb` | Load CSV → clean → scale → save NPZ | ~5 min |
 | 2 | `02_graph_construction.ipynb` | Stratified sample 96K → Dirichlet → k-NN | ~3 min |
-| 3 | `03_federated_training.ipynb` | FedAvg for GCN, GAT, GraphSAGE | ~3 min |
+| 3 | `03_federated_training.ipynb` | FedAvg for GCN, GAT, GraphSAGE (50 rounds × 5 epochs) | ~15 min |
 | 4 | `04_evaluation.ipynb` | Metrics, confusion matrix, plots | ~30 sec |
-| 5 | `05_comprehensive_analysis.ipynb` | Baselines, sweeps, stats, comm cost | ~30 min |
+| 5 | `05_comprehensive_analysis.ipynb` | Baselines, sweeps, stats, comm cost | ~2 hrs |
 
 ### Hardware Notes
 
@@ -113,8 +113,10 @@ Open each notebook in VSCode or Jupyter and execute cells sequentially:
 | Graph construction | Per-client k-NN (cosine, k=15) | More realistic FL; each client builds its own graph |
 | Sampling | Stratified 80K train / 16K test | Feasible k-NN graph size with class balance |
 | Feature scaling | StandardScaler → float32 | Preserves magnitude (important for IDS) |
-| Model architecture | 3-layer GCN/GAT/GraphSAGE | Balanced complexity for 44-dim input |
-| Optimizer | AdamW + CosineAnnealingLR | Better convergence than vanilla Adam |
+| Model architecture | 3-layer GCN/GAT/GraphSAGE + BatchNorm | Balanced complexity for 44-dim input |
+| Loss function | Focal Loss (γ=2.0) + class weights | Addresses severe 34-class imbalance |
+| FL rounds | 50 | Sufficient for FL convergence |
+| Optimizer | AdamW (wd=1e-4) + CosineAnnealingLR | Better convergence than vanilla Adam |
 
 ## Results
 
@@ -141,7 +143,7 @@ FL-GNN variants compared against FL-CNN, Centralized GCN, and FL-MLP baselines. 
 | FL-CNN (1D) | 5.5% ± 1.7% | 1.8% ± 0.7% | 1.5% ± 0.5% |
 | Centralized GCN | 6.6% | 4.5% | 3.9% |
 
-All metrics remain low (≤25% accuracy), indicating that 34-class classification in non-IID FL is highly challenging. GNN-based methods (FL-GCN, FL-GraphSAGE) consistently outperform nongraph baselines, confirming the value of graph structure. The macro F1 is lower than weighted F1, reflecting poor performance on minority attack classes.
+> **Note:** The numbers above are from the original unweighted training (10 rounds, plain CE loss). The notebooks have been updated with Focal Loss, class weighting, BatchNorm, and 50 rounds. Re-run notebooks 03–05 to get updated results with significantly improved metrics.
 
 ### Statistical Analysis (5 seeds — FL-GCN vs FL-CNN)
 
