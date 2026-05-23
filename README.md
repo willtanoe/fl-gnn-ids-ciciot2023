@@ -33,7 +33,7 @@ The dataset was further cleaned and split into three parts by [**Himadri07 on Ka
 
 We credit Himadri07 for the time-consuming task of cleaning and restructuring the raw CICIoT2023 data — a contribution that made this work feasible.
 
-Note that in our pipeline, `train.csv` and `validation.csv` are merged and then stratified-sampled for federated client splits, while `test.csv` is reserved for final evaluation.
+In our pipeline, only `train.csv` is used for training and stratified sampling into federated client splits. `validation.csv` is not used — we reserve `test.csv` for final evaluation instead.
 
 ## Pipeline
 
