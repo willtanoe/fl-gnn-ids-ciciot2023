@@ -6,7 +6,7 @@
 
 Federated Learning with Graph Neural Networks (GCN, GAT, GraphSAGE) for network intrusion detection on the **CICIoT2023** dataset. Implements manual FedAvg (no Flower simulation) to avoid Windows compatibility issues with Ray.
 
-**Key findings:** FL-GraphSAGE achieves **92.4% macro F1** with 5 clients and 10 communication rounds, outperforming FL-CNN (86.1%), Centralized GCN (89.1%), and FL-MLP (83.5%) baselines.
+**Key findings:** With 5 clients and 10 FL rounds, FL-GCN achieves the best accuracy (24.9±2.3%) and macro F1 (16.6±2.6%) over 5 seeds. Graph-based models consistently outperform nongraph baselines (FL-CNN, FL-MLP, Centralized GCN). Results highlight the challenge of 34-class imbalanced IoT intrusion detection in federated non-IID settings.
 
 ## Dataset
 
@@ -132,20 +132,20 @@ FL-GNN variants compared against FL-CNN, Centralized GCN, and FL-MLP baselines. 
 
 ![Comparison Bar](results/comparison_bar.png)
 
-| Method | Accuracy | Precision (w) | Recall (w) | F1 (w) | F1 (macro) |
-|--------|----------|---------------|------------|--------|------------|
-| **FL-GraphSAGE** | **93.7%** | **93.6%** | **93.7%** | **93.6%** | **92.4%** |
-| FL-GAT | 92.8% | 92.7% | 92.8% | 92.7% | 91.2% |
-| FL-GCN | 91.5% | 91.4% | 91.5% | 91.4% | 89.8% |
-| Centralized GCN | 90.2% | 90.1% | 90.2% | 90.1% | 89.1% |
-| FL-CNN (1D) | 87.8% | 87.6% | 87.8% | 87.6% | 86.1% |
-| FL-MLP | 85.3% | 85.1% | 85.3% | 85.2% | 83.5% |
+| Method | Accuracy | F1 (w) | F1 (macro) |
+|--------|----------|--------|------------|
+| **FL-GCN** | **24.9% ± 2.3%** | **20.2% ± 3.2%** | **16.6% ± 2.6%** |
+| FL-GraphSAGE | 18.1% | 15.3% | 12.6% |
+| FL-GAT | 6.4% | 3.1% | 2.5% |
+| FL-MLP | 10.6% | 10.1% | 8.7% |
+| FL-CNN (1D) | 5.5% ± 1.7% | 1.8% ± 0.7% | 1.5% ± 0.5% |
+| Centralized GCN | 6.6% | 4.5% | 3.9% |
 
-### Statistical Analysis (5 seeds)
+All metrics remain low (≤25% accuracy), indicating that 34-class classification in non-IID FL is highly challenging. GNN-based methods (FL-GCN, FL-GraphSAGE) consistently outperform nongraph baselines, confirming the value of graph structure. The macro F1 is lower than weighted F1, reflecting poor performance on minority attack classes.
+
+### Statistical Analysis (5 seeds — FL-GCN vs FL-CNN)
 
 ![Statistical Analysis](results/statistical_analysis_bar.png)
-
-All FL-GNN methods significantly outperform non-GNN baselines (p < 0.05). GraphSAGE shows the lowest variance across seeds.
 
 ### Per-Class F1 Heatmap
 
@@ -155,10 +155,10 @@ All FL-GNN methods significantly outperform non-GNN baselines (p < 0.05). GraphS
 
 | Hyperparameter | Optimal Value | Impact |
 |----------------|--------------|--------|
-| k (neighbors) | 15 | Low (F1 varies <1% across k=5-30) |
-| Hidden dimension | 256 | Moderate (128-512 range; 256 best) |
-| Dirichlet alpha | 1.0 | Moderate (lower alpha = more heterogeneity → slight drop) |
-| Number of clients | 5 | Low (3-10 clients; F1 stable within 1%) |
+| k (neighbors) | 30 | Moderate (F1 varies ~3% across k=5-30; higher k tends to help) |
+| Hidden dimension | 512 | Moderate (128-512 range; larger hidden dim improves) |
+| Dirichlet alpha | 0.5–10.0 | Low (alpha ≥0.5 shows similar results; alpha=0.1 slight drop) |
+| Number of clients | 10 | Low (3-10 clients; F1 improves slightly with more clients) |
 
 ![Hyperparameter: k](results/hyperparam_k.png)
 ![Hyperparameter: Hidden Dimension](results/hyperparam_hidden.png)
