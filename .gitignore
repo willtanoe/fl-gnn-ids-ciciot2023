@@ -5,6 +5,7 @@ dataset-clean/
 data/
 *.parquet
 *.pkl
-results/
+results/*.pt
+results/*.json
 evaluation_results/
 *.ipynb_checkpoints/

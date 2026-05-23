@@ -28,6 +28,16 @@ fl-gnn/
    - `03_federated_training.ipynb`
    - `04_evaluation.ipynb`
 
+## Results
+
+### Training Curves
+
+![Training Losses](results/training_losses.png)
+
+### Accuracy Comparison
+
+![Accuracy Comparison](results/accuracy_comparison.png)
+
 ## Requirements
 
 - Python 3.10+
