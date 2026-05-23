@@ -10,17 +10,30 @@ Federated Learning with Graph Neural Networks (GCN, GAT, GraphSAGE) for network 
 
 ## Dataset
 
-This project uses the [**CICIoT2023**](https://www.unb.ca/cic/datasets/iotdataset-2023.html) dataset, preprocessed and split into three CSV files by [Himadri07 on Kaggle](https://www.kaggle.com/datasets/himadri07/ciciot2023):
+This project uses the [**CICIoT2023**](https://www.unb.ca/cic/datasets/iotdataset-2023.html) dataset, a comprehensive and modern dataset designed for research in Internet of Things (IoT) security, particularly for intrusion detection and anomaly detection systems. Released by the Canadian Institute for Cybersecurity (CIC), this dataset reflects real-world IoT network traffic and attack scenarios, providing a valuable resource for machine learning and cybersecurity research.
+
+The dataset was generated using a realistic testbed that simulates various IoT devices communicating over a network, including smart TVs, webcams, smart thermostats, and wearable devices. It captures both benign traffic and a wide variety of attack types such as Denial of Service (DoS), Distributed Denial of Service (DDoS), brute-force attacks, botnets, reconnaissance, and more advanced threats.
+
+**Key features of CICIoT2023:**
+- Contains a mix of normal and malicious IoT network traffic.
+- Includes 34 distinct attack types, covering modern and advanced cyber threat scenarios.
+- Provides labeled data suitable for supervised machine learning models.
+- Offers extracted network flow features (e.g., packet size, duration, flags, statistical summaries) for traffic classification and anomaly detection.
+- Supports research in intrusion detection, anomaly detection, and IoT security strategy development.
+
+This dataset helps bridge the gap between traditional network security datasets and the unique, evolving patterns of IoT device communication, making it an excellent benchmark for evaluating the performance of AI-based security solutions.
+
+The dataset was further cleaned and split into three parts by [**Himadri07 on Kaggle**](https://www.kaggle.com/datasets/himadri07/ciciot2023):
 
 | Split | Rows | Usage |
 |-------|------|-------|
-| `train.csv` | ~3.8M | Training |
-| `validation.csv` | ~1.1M | Validation |
-| `test.csv` | ~545K | Testing |
+| `train.csv` | 5,491,971 × 47 | Training |
+| `validation.csv` | 1,176,851 × 47 | Validation |
+| `test.csv` | 1,176,851 × 47 | Testing |
 
-The dataset contains 47 columns: 46 network traffic features (e.g., flow duration, packet length, protocol type) and a binary label indicating normal vs. attack traffic. We credit Himadri07 for cleaning and splitting the raw CICIoT2023 data — a time-consuming task that made this work feasible.
+We credit Himadri07 for the time-consuming task of cleaning and restructuring the raw CICIoT2023 data — a contribution that made this work feasible.
 
-Note that only the original `train.csv` is used in our pipeline (merged with validation for stratified sampling) since we rely on the test split for final evaluation.
+Note that in our pipeline, `train.csv` and `validation.csv` are merged and then stratified-sampled for federated client splits, while `test.csv` is reserved for final evaluation.
 
 ## Pipeline
 
